@@ -17,6 +17,8 @@ class sqlScriptBuilder:
 
 	SQL_SCRIPT_HEAD = "INSERT INTO wdqa_constraints (constraint_guid, pid, constraint_type_qid, constraint_parameters) VALUES\n"
 
+	CONSTRAINT_BEGIN_STRING = "{{Constraint:"
+
 	parameters = {}
 
 	def find_next_seperator(self, constraint_parameters, equal_sign):
@@ -180,6 +182,28 @@ class sqlScriptBuilder:
 				return (i - 1)
 
 
+	def split_constraint_block(self, constraint_part):
+		start_index = constraint_part.find(self.CONSTRAINT_BEGIN_STRING)
+
+		authority_pos = constraint_part.find('{{Authority control properties}}')
+		normalization_pos = constraint_part.find('== parameter value normalization ==')
+		end_of_constraint_section = authority_pos if normalization_pos < authority_pos else normalization_pos
+		if start_index == -1 or start_index > end_of_constraint_section and end_of_constraint_section != -1:
+			return "", ""
+		else:
+			start_index += len(self.CONSTRAINT_BEGIN_STRING)
+
+			constraint_part = constraint_part[start_index:]
+
+			end_index = self.get_constraint_end_index(constraint_part)
+
+			constraint_string = constraint_part[:end_index]
+
+			remaining_constraint = constraint_part[end_index:]
+
+			return constraint_string, remaining_constraint
+
+
 	# only purpose: Build SQL-Statement to fill table with constraints
 	# fetches constraints from property talk pages
 	# nonetheless: use table layout that will suit the new way of storing 
@@ -193,8 +217,6 @@ class sqlScriptBuilder:
 		self.writtenLinesInInsertStatement = 0
 		self.outputString = self.SQL_SCRIPT_HEAD
 
-		#this is how every constraint template begins
-		search_string = "{{Constraint:"
 
 		for property_number in range(1, self.MAX_PROPERTY_NUMBER+1):
 
@@ -208,25 +230,10 @@ class sqlScriptBuilder:
 			
 			if self.property_exists(property_talk_page):
 
-				#delete <nowiki> </nowiki> tags from property_talk_page 
 				constraintPart = self.get_constraint_part(property_talk_page)
 
-				# indices for the first and last character belonging to a respective constraint
-				start_index = end_index = None
-				
-				# find beginning of constraint
-				start_index = constraintPart.find(search_string)
-
-				#as long as there are more constraints, set new start index and cut off everything before it
-				while start_index != -1:
-					start_index += len(search_string)
-					constraintPart = constraintPart[start_index:]
-
-					end_index = self.get_constraint_end_index(constraintPart)
-					
-					#extract constraint
-					constraint_string = constraintPart[:end_index]
-
+				constraint_string, remaining_constraint = self.split_constraint_block(constraintPart)
+				while constraint_string != "":
 					
 					constraint_name = None
 					constraint_parameters = None
@@ -286,14 +293,8 @@ class sqlScriptBuilder:
 					self.write_line_in_sql_file(property_number, constraint_name)
 					self.writtenLinesInInsertStatement += 1
 
-					#prepare search for new constraint
-					constraintPart = constraintPart[end_index:]
-					start_index = constraintPart.find(search_string)
-					authority_pos = constraintPart.find('{{Authority control properties}}') 
-					normalization_pos = constraintPart.find('== parameter value normalization ==')	
-					end_of_constraint_section = authority_pos if normalization_pos < authority_pos else normalization_pos
-					if start_index > end_of_constraint_section and end_of_constraint_section != -1:
-						break
+
+					constraint_string, remaining_constraint = self.split_constraint_block(remaining_constraint)
 
 
 		if self.outputString != self.SQL_SCRIPT_HEAD:

@@ -218,4 +218,12 @@ class TestSqlScriptBuilder():
         assert result == expected_result    
 
 
+    def test_split_constraint_block_standard(self):
+        test_constraint_part = '{{Constraint:Type|classes=Q1048835,Q56061|relation=instance}}\n{{Constraint:Value type|classes=Q5,Q95074|relation=instance|mandatory=true}}\n{{Constraint:Target required claim|property=P21}}\n{{Constraint:Target required claim|property=P39}}\n{{Constraint:Qualifiers|list={{P|580}}, {{P|582}} }}\n\n{{ExternalUse|\n* [[:cs:Šablona:Infobox - kraj]]\n* [[:la:Formula:Capsa civitatis Vicidata]]\n* [[:ru:Шаблон:НП]]\n* [[:ru:Шаблон:НП+]]\n* [[:ru:Шаблон:Данные о субъекте Российской Федерации]]\n* [[:ru:Шаблон:Регион Киргизии]]\n* [[:ru:Шаблон:НП/temp]]\n* [[:ru:Шаблон:Административная единица]], [[:ru:Шаблон:Субъект РФ]]\n* [[:ru:Шаблон:Аильный округ Киргизии]]\n}}'
+        expected_result_string = "Type|classes=Q1048835,Q56061|relation=instance"
+        expected_result_remaining = "}}\n{{Constraint:Value type|classes=Q5,Q95074|relation=instance|mandatory=true}}\n{{Constraint:Target required claim|property=P21}}\n{{Constraint:Target required claim|property=P39}}\n{{Constraint:Qualifiers|list={{P|580}}, {{P|582}} }}\n\n{{ExternalUse|\n* [[:cs:Šablona:Infobox - kraj]]\n* [[:la:Formula:Capsa civitatis Vicidata]]\n* [[:ru:Шаблон:НП]]\n* [[:ru:Шаблон:НП+]]\n* [[:ru:Шаблон:Данные о субъекте Российской Федерации]]\n* [[:ru:Шаблон:Регион Киргизии]]\n* [[:ru:Шаблон:НП/temp]]\n* [[:ru:Шаблон:Административная единица]], [[:ru:Шаблон:Субъект РФ]]\n* [[:ru:Шаблон:Аильный округ Киргизии]]\n}}"
+        result_string, result_remaining = self.builder.split_constraint_block(test_constraint_part)
+        assert result_string == expected_result_string
+        assert result_remaining == expected_result_remaining
+
 
