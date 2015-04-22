@@ -169,6 +169,7 @@ class sqlScriptBuilder:
 
 
 	def get_constraint_end_index(self, constraintPart):
+		#match brackets to find end of constraint
 		count = 2
 		for i, c in enumerate(constraintPart):
 			if c == '{':
@@ -177,8 +178,6 @@ class sqlScriptBuilder:
 				count -= 1
 			if count == 0:
 				return (i - 1)
-				# end_index = i-1
-				# break
 
 
 	# only purpose: Build SQL-Statement to fill table with constraints
@@ -203,7 +202,6 @@ class sqlScriptBuilder:
 				self.writeOutputStringToFile()
 
 
-			#self.outputString += (30*"=" + "Property " + format(property_number) + 30*"=")
 			self.progress_print(property_number, self.MAX_PROPERTY_NUMBER)
 
 			property_talk_page = requests.get("http://www.wikidata.org/w/index.php?title=Property_talk:P" + str(property_number) + "&action=edit").text
@@ -224,17 +222,7 @@ class sqlScriptBuilder:
 					start_index += len(search_string)
 					constraintPart = constraintPart[start_index:]
 
-					#match brackets to find end of constraint
 					end_index = self.get_constraint_end_index(constraintPart)
-					# count = 2
-					# for i, c in enumerate(constraintPart):
-					# 	if c == '{':
-					# 		count += 1
-					# 	elif c == '}':
-					# 		count -= 1
-					# 	if count == 0:
-					# 		end_index = i-1
-					# 		break
 					
 					#extract constraint
 					constraint_string = constraintPart[:end_index]
