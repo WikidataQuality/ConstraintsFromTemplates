@@ -130,14 +130,17 @@ class sqlScriptBuilder:
 		self.parameters = {}
 		self.list_parameter = 'NULL'
 
+	def reset_number_of_written_lines_and_output_string():
+		self.writtenLinesInInsertStatement = 0
+		self.outputString = self.SQL_SCRIPT_HEAD
+
 	def writeOutputStringToFile(self):
 		print("writing into " + self.SQL_FILE_NAME)
 		with codecs.open(self.SQL_FILE_NAME, "a", "utf-8") as sql_file:
 			self.outputString = self.outputString.rstrip(",\n") + ";\n\n"
 			sql_file.write(self.outputString)
 
-		self.writtenLinesInInsertStatement = 0
-		self.outputString = self.SQL_SCRIPT_HEAD
+		self.reset_number_of_written_lines_and_output_string()
 
 	def get_constraint_part(self, property_talk_page):
 		start = property_talk_page.find("{{Constraint:")
@@ -218,19 +221,40 @@ class sqlScriptBuilder:
 	}
 
 
+	def add_all_parameters(self, constraint_parameters):
+		while constraint_parameters != None and constraint_parameters.find('=') != -1:
+			equal_sign = constraint_parameters.find('=')
+			next_seperator = self.find_next_seperator(constraint_parameters, equal_sign)
+			a = 0 if next_seperator == -1 else -1
+			parameter_name = constraint_parameters[:equal_sign].strip()
+			parameter_value = constraint_parameters[equal_sign+1:next_seperator+a]
+			
+			if parameter_name == 'list':
+				self.add_list(parameter_value, self.constraint_name)
+			elif parameter_name == 'required' and parameter_value == 'true':
+				self.constraint_name = 'Mandatory qualifiers'
+			else:
+				try:
+					self.call_method[parameter_name](self, parameter_value)
+				except KeyError, e:  # other Exceptions will be raised
+					pass
+			constraint_parameters = constraint_parameters[next_seperator:]
+
+
+	def delete_old_sql_file(self):
+		if os.path.exists(self.SQL_FILE_NAME):
+			os.remove(self.SQL_FILE_NAME)
+
+
 	# only purpose: Build SQL-Statement to fill table with constraints
 	# fetches constraints from property talk pages
 	# nonetheless: use table layout that will suit the new way of storing 
 	# constraints as statements on properties
 
 	def run(self):
-		# delete old file
-		if os.path.exists(self.SQL_FILE_NAME):
-			os.remove(self.SQL_FILE_NAME)
+		self.delete_old_sql_file()
 
-		self.writtenLinesInInsertStatement = 0
-		self.outputString = self.SQL_SCRIPT_HEAD
-
+		self.reset_number_of_written_lines_and_output_string()
 
 		for property_number in range(1, self.MAX_PROPERTY_NUMBER+1):
 
@@ -248,42 +272,22 @@ class sqlScriptBuilder:
 
 				constraint_string, remaining_constraint = self.split_constraint_block(constraintPart)
 				while constraint_string != "":
-					
-					# constraint_name = None
-					# constraint_parameters = None
+					self.constraint_name = None
 					self.list_parameter = 'NULL'
 
 					delimiter_index = constraint_string.find('|')
 
 					if delimiter_index == -1:
-						constraint_name = constraint_string
+						self.constraint_name = constraint_string
 					else:			
-						constraint_name = constraint_string[:delimiter_index]
+						self.constraint_name = constraint_string[:delimiter_index]
 						constraint_parameters = constraint_string[delimiter_index+1:]
 
-						while constraint_parameters != None and constraint_parameters.find('=') != -1:
-							equal_sign = constraint_parameters.find('=')
-							next_seperator = self.find_next_seperator(constraint_parameters, equal_sign)
-							a = 0 if next_seperator == -1 else -1
-							parameter_name = constraint_parameters[:equal_sign].strip()
-							parameter_value = constraint_parameters[equal_sign+1:next_seperator+a]
-							
-							
-							if parameter_name == 'list':
-							    self.add_list(parameter_value, constraint_name)
-							elif parameter_name == 'required' and parameter_value == 'true':
-								constraint_name = 'Mandatory qualifiers'
-							else:
-								try:
-									self.call_method[parameter_name](self, parameter_value)
-								except KeyError, e:  # other Exceptions will be raised
-									pass
-								
-							    
-							constraint_parameters = constraint_parameters[next_seperator:]
+					
+					self.add_all_parameters(constraint_parameters)
 					
 				
-					self.write_line_in_sql_file(property_number, constraint_name)
+					self.write_line_in_sql_file(property_number, self.constraint_name)
 					self.writtenLinesInInsertStatement += 1
 
 
