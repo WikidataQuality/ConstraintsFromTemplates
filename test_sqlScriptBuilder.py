@@ -215,13 +215,40 @@ class TestSqlScriptBuilder():
         test_constraintPart = '{{{}{{}{}}{}{}}}{}{{{{{}{{{}}{{}}}}}}}}}{}{{{}}{{}{}}}{{}}'
         expected_result = 38
         result = self.builder.get_constraint_end_index(test_constraintPart)
-        assert result == expected_result    
+        assert result == expected_result
 
 
     def test_split_constraint_block_standard(self):
         test_constraint_part = '{{Constraint:Type|classes=Q1048835,Q56061|relation=instance}}\n{{Constraint:Value type|classes=Q5,Q95074|relation=instance|mandatory=true}}\n{{Constraint:Target required claim|property=P21}}\n{{Constraint:Target required claim|property=P39}}\n{{Constraint:Qualifiers|list={{P|580}}, {{P|582}} }}\n\n{{ExternalUse|\n* [[:cs:Šablona:Infobox - kraj]]\n* [[:la:Formula:Capsa civitatis Vicidata]]\n* [[:ru:Шаблон:НП]]\n* [[:ru:Шаблон:НП+]]\n* [[:ru:Шаблон:Данные о субъекте Российской Федерации]]\n* [[:ru:Шаблон:Регион Киргизии]]\n* [[:ru:Шаблон:НП/temp]]\n* [[:ru:Шаблон:Административная единица]], [[:ru:Шаблон:Субъект РФ]]\n* [[:ru:Шаблон:Аильный округ Киргизии]]\n}}'
         expected_result_string = "Type|classes=Q1048835,Q56061|relation=instance"
         expected_result_remaining = "}}\n{{Constraint:Value type|classes=Q5,Q95074|relation=instance|mandatory=true}}\n{{Constraint:Target required claim|property=P21}}\n{{Constraint:Target required claim|property=P39}}\n{{Constraint:Qualifiers|list={{P|580}}, {{P|582}} }}\n\n{{ExternalUse|\n* [[:cs:Šablona:Infobox - kraj]]\n* [[:la:Formula:Capsa civitatis Vicidata]]\n* [[:ru:Шаблон:НП]]\n* [[:ru:Шаблон:НП+]]\n* [[:ru:Шаблон:Данные о субъекте Российской Федерации]]\n* [[:ru:Шаблон:Регион Киргизии]]\n* [[:ru:Шаблон:НП/temp]]\n* [[:ru:Шаблон:Административная единица]], [[:ru:Шаблон:Субъект РФ]]\n* [[:ru:Шаблон:Аильный округ Киргизии]]\n}}"
+        result_string, result_remaining = self.builder.split_constraint_block(test_constraint_part)
+        assert result_string == expected_result_string
+        assert result_remaining == expected_result_remaining
+
+
+    def test_split_constraint_block_another_standard(self):
+        test_constraint_part = '}}\n{{Constraint:Item|property=P19}}\n{{Constraint:Item|property=P569}}\n{{Constraint:Qualifiers|list={{P|1039}}|mandatory=true}}\n\n{{Person properties}}\n[[Category: Reciprocal properties]]\n\n\n'
+        expected_result_string = 'Item|property=P19'
+        expected_result_remaining = '}}\n{{Constraint:Item|property=P569}}\n{{Constraint:Qualifiers|list={{P|1039}}|mandatory=true}}\n\n{{Person properties}}\n[[Category: Reciprocal properties]]\n\n\n'
+        result_string, result_remaining = self.builder.split_constraint_block(test_constraint_part)
+        assert result_string == expected_result_string
+        assert result_remaining == expected_result_remaining
+
+
+    def test_split_constraint_block_empty_result_standard(self):
+        test_constraint_part = '}}\n\n{{Person properties}}\n[[Category: Reciprocal properties]]\n\n'
+        expected_result_string = ''
+        expected_result_remaining = ''
+        result_string, result_remaining = self.builder.split_constraint_block(test_constraint_part)
+        assert result_string == expected_result_string
+        assert result_remaining == expected_result_remaining
+
+
+    def test_split_constraint_block_valid_with_authority_string(self):
+        test_constraint_part = '}}\n{{Constraint:Qualifiers|list=}}\n\n{{ExternalUse|\n* [[:cs:Šablona:Autoritní kontrola]]\n* [[:oc:Modèl:Infobox identificacions autoritats]]\n* [[:fr:Module:Autorité]]\n* [[:wikisource:fr:Modèle:Autorité]]\n* [[:cs:Šablona:Autoritní data]]\n}}\n\n{{Authority control properties}}\n\n__TOC__\n\n'
+        expected_result_string = 'Qualifiers|list='
+        expected_result_remaining = '}}\n\n{{ExternalUse|\n* [[:cs:Šablona:Autoritní kontrola]]\n* [[:oc:Modèl:Infobox identificacions autoritats]]\n* [[:fr:Module:Autorité]]\n* [[:wikisource:fr:Modèle:Autorité]]\n* [[:cs:Šablona:Autoritní data]]\n}}\n\n{{Authority control properties}}\n\n__TOC__\n\n'
         result_string, result_remaining = self.builder.split_constraint_block(test_constraint_part)
         assert result_string == expected_result_string
         assert result_remaining == expected_result_remaining

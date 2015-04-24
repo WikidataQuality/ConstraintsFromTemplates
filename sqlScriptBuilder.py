@@ -184,24 +184,38 @@ class sqlScriptBuilder:
 
 	def split_constraint_block(self, constraint_part):
 		start_index = constraint_part.find(self.CONSTRAINT_BEGIN_STRING)
-
-		authority_pos = constraint_part.find('{{Authority control properties}}')
-		normalization_pos = constraint_part.find('== parameter value normalization ==')
-		end_of_constraint_section = authority_pos if normalization_pos < authority_pos else normalization_pos
-		if start_index == -1 or start_index > end_of_constraint_section and end_of_constraint_section != -1:
-			return "", ""
-		else:
+		if start_index != -1:
 			start_index += len(self.CONSTRAINT_BEGIN_STRING)
-
 			constraint_part = constraint_part[start_index:]
 
 			end_index = self.get_constraint_end_index(constraint_part)
-
 			constraint_string = constraint_part[:end_index]
-
 			remaining_constraint = constraint_part[end_index:]
 
 			return constraint_string, remaining_constraint
+		else:
+			return "", ""
+
+
+	call_method = {
+	    'base_property' : add_property,
+	    'class' : add_classes,
+	    'classes' : add_classes,
+	    'exceptions' : add_exceptions,
+	    'group by'  : add_group_by,
+	    'group property' : add_items,
+	    'item' : add_items,
+	    'items' : add_items,
+	    'mandatory' : add_status,
+	    'max' : add_max,
+	    'min' : add_min,
+	    'namespace' : add_namespace,
+	    'pattern' : add_pattern,
+	    'property' : add_property,
+	    'relation' : add_relation,
+	    'value' : add_items,
+	    'values' : add_items
+	}
 
 
 	# only purpose: Build SQL-Statement to fill table with constraints
@@ -235,8 +249,8 @@ class sqlScriptBuilder:
 				constraint_string, remaining_constraint = self.split_constraint_block(constraintPart)
 				while constraint_string != "":
 					
-					constraint_name = None
-					constraint_parameters = None
+					# constraint_name = None
+					# constraint_parameters = None
 					self.list_parameter = 'NULL'
 
 					delimiter_index = constraint_string.find('|')
@@ -254,39 +268,18 @@ class sqlScriptBuilder:
 							parameter_name = constraint_parameters[:equal_sign].strip()
 							parameter_value = constraint_parameters[equal_sign+1:next_seperator+a]
 							
-							if parameter_name == 'base_property':
-								self.add_property(parameter_value)
-							elif parameter_name == 'class' or parameter_name == 'classes':
-								self.add_classes(parameter_value)
-							elif parameter_name == 'exceptions':
-								self.add_exceptions(parameter_value)
-							elif parameter_name == 'group by' or parameter_name == 'group property':
-								self.add_group_by(parameter_value)
-							elif parameter_name == 'item' or parameter_name == 'items':
-								self.add_items(parameter_value)
-							elif parameter_name == 'list':
-								self.add_list(parameter_value, constraint_name)
-							elif parameter_name == 'mandatory':
-								self.add_status(parameter_value)
-							elif parameter_name == 'max':
-								self.add_max(parameter_value)
-							elif parameter_name == 'min':
-								self.add_min(parameter_value)
-							elif parameter_name == 'namespace':
-								self.add_namespace(parameter_value)
-							elif parameter_name == 'pattern':
-								self.add_pattern(parameter_value)
-							elif parameter_name == 'property':
-								self.add_property(parameter_value)
-							elif parameter_name == 'relation':
-								self.add_relation(parameter_value)
-							elif parameter_name == 'value' or parameter_name == 'values':
-								self.add_items(parameter_value)
+							
+							if parameter_name == 'list':
+							    self.add_list(parameter_value, constraint_name)
 							elif parameter_name == 'required' and parameter_value == 'true':
 								constraint_name = 'Mandatory qualifiers'
-							
-
-
+							else:
+								try:
+									self.call_method[parameter_name](self, parameter_value)
+								except KeyError, e:  # other Exceptions will be raised
+									pass
+								
+							    
 							constraint_parameters = constraint_parameters[next_seperator:]
 					
 				
