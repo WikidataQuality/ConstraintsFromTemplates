@@ -61,11 +61,15 @@ class sqlScriptBuilder:
 		if snakString != "":
 			self.parameters['snak'] = snakString.rstrip(",")
 
-	def add_list(self, values, constraint_name):
-		if constraint_name == "Qualifiers" or constraint_name == "Mandatory qualifiers":
+	def add_list(self, values):
+		if self.constraint_name == "Qualifiers" or self.constraint_name == "Mandatory qualifiers":
 			self.parameters['property'] = self.to_comma_seperated_string(values)
 		else:
 			self.list_parameter = self.to_comma_seperated_string(values)
+
+	def set_constraint_name(self, values):
+		if values == 'true':
+			self.constraint_name = 'Mandatory qualifiers'
 
 	def add_status(self, values):
 		self.parameters['constraint_status'] = 'mandatory'
@@ -130,7 +134,7 @@ class sqlScriptBuilder:
 		self.parameters = {}
 		self.list_parameter = 'NULL'
 
-	def reset_number_of_written_lines_and_output_string():
+	def reset_number_of_written_lines_and_output_string(self):
 		self.writtenLinesInInsertStatement = 0
 		self.outputString = self.SQL_SCRIPT_HEAD
 
@@ -209,6 +213,7 @@ class sqlScriptBuilder:
 	    'group property' : add_items,
 	    'item' : add_items,
 	    'items' : add_items,
+	    'list' : add_list,
 	    'mandatory' : add_status,
 	    'max' : add_max,
 	    'min' : add_min,
@@ -216,29 +221,31 @@ class sqlScriptBuilder:
 	    'pattern' : add_pattern,
 	    'property' : add_property,
 	    'relation' : add_relation,
+	    'required' : set_constraint_name,
 	    'value' : add_items,
 	    'values' : add_items
 	}
 
 
+	def split_parameters(self, constraint_parameters):
+		equal_sign_pos = constraint_parameters.find('=')
+		next_seperator = self.find_next_seperator(constraint_parameters, equal_sign_pos)
+		value_end_pos = max(-1, next_seperator - 1)
+
+		parameter_name = constraint_parameters[:equal_sign_pos].strip()
+		parameter_value = constraint_parameters[equal_sign_pos + 1 : value_end_pos]
+		remaining_constraint_parameters = constraint_parameters[next_seperator:]
+
+		return parameter_name, parameter_value, remaining_constraint_parameters
+
+
 	def add_all_parameters(self, constraint_parameters):
 		while constraint_parameters != None and constraint_parameters.find('=') != -1:
-			equal_sign = constraint_parameters.find('=')
-			next_seperator = self.find_next_seperator(constraint_parameters, equal_sign)
-			a = 0 if next_seperator == -1 else -1
-			parameter_name = constraint_parameters[:equal_sign].strip()
-			parameter_value = constraint_parameters[equal_sign+1:next_seperator+a]
-			
-			if parameter_name == 'list':
-				self.add_list(parameter_value, self.constraint_name)
-			elif parameter_name == 'required' and parameter_value == 'true':
-				self.constraint_name = 'Mandatory qualifiers'
-			else:
-				try:
-					self.call_method[parameter_name](self, parameter_value)
-				except KeyError, e:  # other Exceptions will be raised
-					pass
-			constraint_parameters = constraint_parameters[next_seperator:]
+			p_name, p_value, constraint_parameters = self.split_parameters(constraint_parameters)	
+			try:
+				self.call_method[p_name](self, p_value)
+			except KeyError, e:  # other Exceptions will be raised
+				pass
 
 
 	def delete_old_sql_file(self):
