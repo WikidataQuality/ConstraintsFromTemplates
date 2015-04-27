@@ -253,6 +253,28 @@ class sqlScriptBuilder:
 			os.remove(self.SQL_FILE_NAME)
 
 
+	def process_constraint_part(self, constraint_part, property_number):
+		constraint_string, remaining_constraint = self.split_constraint_block(constraint_part)
+		while constraint_string != "":
+			self.constraint_name = None
+			self.list_parameter = 'NULL'
+
+			delimiter_index = constraint_string.find('|')
+
+			if delimiter_index == -1:
+				self.constraint_name = constraint_string
+			else:			
+				self.constraint_name = constraint_string[:delimiter_index]
+				constraint_parameters = constraint_string[delimiter_index+1:]
+				self.add_all_parameters(constraint_parameters)
+					
+			self.write_line_in_sql_file(property_number, self.constraint_name)
+			self.writtenLinesInInsertStatement += 1
+
+			constraint_string, remaining_constraint = self.split_constraint_block(remaining_constraint)
+
+
+
 	# only purpose: Build SQL-Statement to fill table with constraints
 	# fetches constraints from property talk pages
 	# nonetheless: use table layout that will suit the new way of storing 
@@ -277,29 +299,7 @@ class sqlScriptBuilder:
 
 				constraintPart = self.get_constraint_part(property_talk_page)
 
-				constraint_string, remaining_constraint = self.split_constraint_block(constraintPart)
-				while constraint_string != "":
-					self.constraint_name = None
-					self.list_parameter = 'NULL'
-
-					delimiter_index = constraint_string.find('|')
-
-					if delimiter_index == -1:
-						self.constraint_name = constraint_string
-					else:			
-						self.constraint_name = constraint_string[:delimiter_index]
-						constraint_parameters = constraint_string[delimiter_index+1:]
-
-					
-					self.add_all_parameters(constraint_parameters)
-					
-				
-					self.write_line_in_sql_file(property_number, self.constraint_name)
-					self.writtenLinesInInsertStatement += 1
-
-
-					constraint_string, remaining_constraint = self.split_constraint_block(remaining_constraint)
-
+				self.process_constraint_part(constraintPart, property_number)
 
 		if self.outputString != self.SQL_SCRIPT_HEAD:
 			self.writeOutputStringToFile()
