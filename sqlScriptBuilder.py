@@ -174,7 +174,8 @@ class sqlScriptBuilder:
 
 
 	def property_exists(self, propertyTalkPage):
-		return not (propertyTalkPage.find("Creating Property talk") != -1 or propertyTalkPage == "")
+		return not (propertyTalkPage.find("Creating Property talk") != -1 or 
+			propertyTalkPage == "")
 
 
 	def get_constraint_end_index(self, constraintPart):
@@ -210,7 +211,7 @@ class sqlScriptBuilder:
 	    'classes' : add_classes,
 	    'exceptions' : add_exceptions,
 	    'group by'  : add_group_by,
-	    'group property' : add_items,
+	    'group property' : add_group_by,
 	    'item' : add_items,
 	    'items' : add_items,
 	    'list' : add_list,
@@ -276,7 +277,7 @@ class sqlScriptBuilder:
 
 	def get_property_talk_page(self, property_number):
 		url = "http://www.wikidata.org/w/index.php?title=Property_talk:P" + \
-				str(property_number) + "&action=edit"
+			  str(property_number) + "&action=edit"
 		property_talk_page = requests.get(url).text
 		return property_talk_page
 

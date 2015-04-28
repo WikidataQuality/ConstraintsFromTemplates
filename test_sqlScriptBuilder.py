@@ -9,6 +9,41 @@ class TestSqlScriptBuilder():
         self.builder = sqlScriptBuilder()
 
 
+    def test_find_next_seperator_pipe_before_next_equal(self):
+        test_constraint_parameters = "classes=Q1048835,Q56061|relation=instance"
+        test_equal_sign = 7
+        expected_result = 24
+        result = self.builder.find_next_seperator(test_constraint_parameters, test_equal_sign)
+        assert result == expected_result
+
+    def test_find_next_seperator_none(self):
+        test_constraint_parameters = "relation=instance"
+        test_equal_sign = 8
+        expected_result = 18
+        result = self.builder.find_next_seperator(test_constraint_parameters, test_equal_sign)
+        assert result == expected_result
+
+    def test_find_next_seperator_no_pipe(self):
+        test_constraint_parameters = "classes=Q5,Q95074 relation=instance"
+        test_equal_sign = 7
+        expected_result = 35
+        result = self.builder.find_next_seperator(test_constraint_parameters, test_equal_sign)
+        assert result == expected_result
+
+    def test_find_next_seperator_multiple_pipes(self):
+        test_constraint_parameters = "items={{Q|6581072}}, {{Q|43445}}|mandatory=true"
+        test_equal_sign = 5
+        expected_result = 33
+        result = self.builder.find_next_seperator(test_constraint_parameters, test_equal_sign)
+        assert result == expected_result
+
+    def test_find_next_seperator_empty_parameters(self):
+        test_constraint_parameters = ""
+        test_equal_sign = 0
+        expected_result = 1
+        result = self.builder.find_next_seperator(test_constraint_parameters, test_equal_sign)
+        assert result == expected_result
+
     def test_to_comma_seperated_string_standard(self):
         test_string = "{{Q|6581072}}, {{Q|43445}}, {{Q|1052281}}"
         expected_result = "Q6581072,Q43445,Q1052281"
