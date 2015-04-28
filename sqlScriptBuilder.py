@@ -274,6 +274,19 @@ class sqlScriptBuilder:
 			constraint_string, remaining_constraint = self.split_constraint_block(remaining_constraint)
 
 
+	def get_property_talk_page(self, property_number):
+		url = "http://www.wikidata.org/w/index.php?title=Property_talk:P" + \
+				str(property_number) + "&action=edit"
+		property_talk_page = requests.get(url).text
+		return property_talk_page
+
+
+	def process_property_talk_page(self, property_number):
+		property_talk_page = self.get_property_talk_page(property_number)
+		if self.property_exists(property_talk_page):
+			constraintPart = self.get_constraint_part(property_talk_page)
+			self.process_constraint_part(constraintPart, property_number)
+
 
 	# only purpose: Build SQL-Statement to fill table with constraints
 	# fetches constraints from property talk pages
@@ -290,16 +303,9 @@ class sqlScriptBuilder:
 			if (self.writtenLinesInInsertStatement > self.MAX_SQL_LINE_NUMBER):
 				self.writeOutputStringToFile()
 
-
 			self.progress_print(property_number, self.MAX_PROPERTY_NUMBER)
 
-			property_talk_page = requests.get("http://www.wikidata.org/w/index.php?title=Property_talk:P" + str(property_number) + "&action=edit").text
-			
-			if self.property_exists(property_talk_page):
-
-				constraintPart = self.get_constraint_part(property_talk_page)
-
-				self.process_constraint_part(constraintPart, property_number)
+			self.process_property_talk_page(property_number)
 
 		if self.outputString != self.SQL_SCRIPT_HEAD:
 			self.writeOutputStringToFile()
