@@ -19,7 +19,9 @@ class sqlScriptBuilder:
 
 	CONSTRAINT_BEGIN_STRING = "{{Constraint:"
 
-	parameters = {}
+	def __init__(self):
+		self.parameters = {}
+		self.constraint_name = ""
 
 	def find_next_seperator(self, constraint_parameters, equal_sign):
 		next_equal_sign = constraint_parameters.find('=', equal_sign + 1)

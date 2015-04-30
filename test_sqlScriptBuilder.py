@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
+import pytest
+
 from sqlScriptBuilder import sqlScriptBuilder
+
 
 class TestSqlScriptBuilder():
 
     def setup_method(self, method):
         #  setup_method is invoked for every test method of a class
         self.builder = sqlScriptBuilder()
-
 
     def test_find_next_seperator_pipe_before_next_equal(self):
         test_constraint_parameters = "classes=Q1048835,Q56061|relation=instance"
@@ -51,6 +53,20 @@ class TestSqlScriptBuilder():
         assert result == expected_result
 
 
+    def test_to_comma_seperated_string_another_standard(self):
+        test_string = "{{Q|1035954}}, {{Q|6636}}, {{Q|43200}}, {{Q|592}}, {{Q|6649}}, {{Q|339014}}"
+        expected_result = "Q1035954,Q6636,Q43200,Q592,Q6649,Q339014"
+        result = self.builder.to_comma_seperated_string(test_string)
+        assert result == expected_result
+
+
+    def test_to_comma_seperated_string_third_standard(self):
+        test_string = "novalue, somevalue, [[Q889]], [[Q222]], [[Q262]], [[Q228]], [[Q916]], [[Q781]]"
+        expected_result = "novalue,somevalue,Q889,Q222,Q262,Q228,Q916,Q781"
+        result = self.builder.to_comma_seperated_string(test_string)
+        assert result == expected_result
+
+
     def test_to_comma_seperated_string_empty(self):
         test_string = ""
         expected_result = ""
@@ -88,7 +104,8 @@ class TestSqlScriptBuilder():
 
     def test_add_property_multiple(self):
         expected_result = ""
-        assert self.builder.parameters['property'] == expected_result
+        with pytest.raises(KeyError):
+            parameter_property = self.builder.parameters['property']
 
         test_value = "P2992"
         expected_result = "P2992"
@@ -139,7 +156,7 @@ class TestSqlScriptBuilder():
         assert self.builder.parameters['class'] == expected_result
 
 
-    def test_add_exceptions_standard(self, monkeypatch):
+    def test_add_exceptions_semicolon(self, monkeypatch):
         def mockreturn(path):
             return "Q18646002;Q18646076"
         monkeypatch.setattr(self.builder, 'to_comma_seperated_string', mockreturn)
@@ -147,6 +164,115 @@ class TestSqlScriptBuilder():
         expected_result = "Q18646002,Q18646076"
         self.builder.add_exceptions(test_value)
         assert self.builder.parameters['known_exception'] == expected_result
+
+
+    def test_add_exceptions_comma(self, monkeypatch):
+        def mockreturn(path):
+            return "Q41054,Q83160,Q79015"
+        monkeypatch.setattr(self.builder, 'to_comma_seperated_string', mockreturn)
+        test_value = "{{Q|41054}}, {{Q|83160}}, {{Q|79015}}"
+        expected_result = "Q41054,Q83160,Q79015"
+        self.builder.add_exceptions(test_value)
+        assert self.builder.parameters['known_exception'] == expected_result
+
+
+    def test_add_exceptions_no_mock(self):
+        test_value = "{{Q|28860}}, {{Q|49957}}, {{Q|50032}}, {{Q|271818}}, {{Q|3497268}}, {{Q|1543006}} "
+        expected_result = "Q28860,Q49957,Q50032,Q271818,Q3497268,Q1543006"
+        self.builder.add_exceptions(test_value)
+        assert self.builder.parameters['known_exception'] == expected_result
+
+
+    def test_add_goup_by_standard(self):
+        test_value = "P17"
+        expected_result = "P17"
+        self.builder.add_group_by(test_value)
+        assert self.builder.parameters['group_by'] == expected_result
+
+
+    def test_add_goup_by_whitespace(self):
+        test_value = "  P31   "
+        expected_result = "P31"
+        self.builder.add_group_by(test_value)
+        assert self.builder.parameters['group_by'] == expected_result
+
+
+    def test_add_goup_by_empty(self):
+        test_value = ""
+        expected_result = ""
+        self.builder.add_group_by(test_value)
+        assert self.builder.parameters['group_by'] == expected_result
+
+
+    def test_add_items_standard(self, monkeypatch):
+        def mockreturn(path):
+            return "Q1035954,Q6636,Q43200,Q592,Q6649,Q339014"
+        monkeypatch.setattr(self.builder, 'to_comma_seperated_string', mockreturn)
+        test_value = "{{Q|1035954}}, {{Q|6636}}, {{Q|43200}}, {{Q|592}}, {{Q|6649}}, {{Q|339014}}"
+        expected_parameters_item = "Q1035954,Q6636,Q43200,Q592,Q6649,Q339014"
+        self.builder.add_items(test_value)
+        assert self.builder.parameters['item'] == expected_parameters_item
+        with pytest.raises(KeyError):
+            snak = self.builder.parameters['snak']
+
+
+    def test_add_items_with_snak(self, monkeypatch):
+        def mockreturn(path):
+            return "novalue,somevalue,Q889,Q222,Q262,Q228,Q916,Q781"
+        monkeypatch.setattr(self.builder, 'to_comma_seperated_string', mockreturn)
+        test_value = "novalue, somevalue, [[Q889]], [[Q222]], [[Q262]], [[Q228]], [[Q916]], [[Q781]]"
+        expected_parameters_item = "Q889,Q222,Q262,Q228,Q916,Q781"
+        expected_parameters_snak = "novalue,somevalue"
+        self.builder.add_items(test_value)
+        assert self.builder.parameters['item'] == expected_parameters_item
+        assert self.builder.parameters['snak'] == expected_parameters_snak
+
+
+    def test_add_items_empty(self, monkeypatch):
+        def mockreturn(path):
+            return ""
+        monkeypatch.setattr(self.builder, 'to_comma_seperated_string', mockreturn)
+        test_value = ""
+        self.builder.add_items(test_value)
+        with pytest.raises(KeyError):
+            item = self.builder.parameters['item']
+        with pytest.raises(KeyError):
+            snak = self.builder.parameters['snak']
+
+
+    def test_add_items_with_snak_no_mock(self):
+        test_value = "somevalue, [[Q121]], [[Q212]], [[Q44998]], [[Q19765]]"
+        expected_parameters_item = "Q121,Q212,Q44998,Q19765"
+        expected_parameters_snak = "somevalue"
+        self.builder.add_items(test_value)
+        assert self.builder.parameters['item'] == expected_parameters_item
+        assert self.builder.parameters['snak'] == expected_parameters_snak
+
+
+    def test_add_list_qualifiers(self, monkeypatch):
+        def mockreturn(path):
+            return "P580,P582,P805"
+        monkeypatch.setattr(self.builder, 'to_comma_seperated_string', mockreturn)
+        test_value = "{{P|580}}, {{P|582}}, {{P|805}}"
+        expected_parameter_property = "P580,P582,P805"
+        self.builder.constraint_name = "Qualifiers"
+        self.builder.add_list(test_value)
+        assert self.builder.parameters['property'] == expected_parameter_property
+        with pytest.raises(AttributeError):
+            list_parameter = self.builder.list_parameter
+
+
+    def test_add_list_conflicts_with(self, monkeypatch):
+        def mockreturn(path):
+            return "P31:Q4167410,Q101352,Q12308941,Q11879590,Q3409032,Q202444,Q577"
+        monkeypatch.setattr(self.builder, 'to_comma_seperated_string', mockreturn)
+        test_value = "{{P|31}}: {{Q|4167410}}, {{Q|101352}}, {{Q|12308941}}, {{Q|11879590}}, {{Q|3409032}}, {{Q|202444}}, {{Q|577}}"
+        expected_list_parameter = "P31:Q4167410,Q101352,Q12308941,Q11879590,Q3409032,Q202444,Q577"
+        self.builder.constraint_name = "Conflicts with"
+        self.builder.add_list(test_value)
+        with pytest.raises(KeyError):
+            parameter_property = self.builder.parameters['property']
+        assert self.builder.list_parameter == expected_list_parameter
 
 
     def test_progress_print_standard(self, capsys):
