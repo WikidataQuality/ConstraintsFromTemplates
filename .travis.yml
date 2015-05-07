@@ -1,0 +1,15 @@
+language: python
+python:
+    - 2.7
+
+install: 
+    - sudo apt-get install libxml2-dev libxslt-dev python-dev
+    - pip install -r requirements.txt
+    - pip install pytest-cov
+    - pip install coveralls
+
+script: 
+    - py.test --verbose --cov-config .coveragerc --cov dumpconverter --cov-report xml
+
+after_success:
+    - coveralls
