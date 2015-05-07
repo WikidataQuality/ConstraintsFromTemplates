@@ -77,15 +77,9 @@ class sqlScriptBuilder:
 		self.parameters['constraint_status'] = 'mandatory'
 
 	def add_max(self, values):
-		#if "0000" in values or "." in values:
-		#	self.parameters['maximum date'] = values
-		#else:
 		self.parameters['maximum_quantity'] = values.strip()
 
 	def add_min(self, values):
-		#if "0000" in values or "." in values:
-		#	self.parameters['minimum date'] = values
-		#else:
 		self.parameters['minimum_quantity'] = values.strip()
 
 	def add_namespace(self, values):
@@ -108,7 +102,7 @@ class sqlScriptBuilder:
 			self.split_list_parameter(line)
 			self.write_blob()	
 			self.parameters.pop('item', None)
-		self.reset_parameter
+		self.reset_parameter()
 
 	def write_line_in_sql_file(self, property_number, constraint_name):
 		if self.list_parameter != 'NULL':

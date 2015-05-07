@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import pytest
+from mock import Mock
+from mock import patch
+from mock import create_autospec
 
 from sqlScriptBuilder import sqlScriptBuilder
 
@@ -274,6 +277,276 @@ class TestSqlScriptBuilder():
             parameter_property = self.builder.parameters['property']
         assert self.builder.list_parameter == expected_list_parameter
 
+
+    def test_set_constraint_name_true(self):
+        test_value = 'true'
+        expected_result = 'Mandatory qualifiers'
+        self.builder.set_constraint_name(test_value)
+        assert self.builder.constraint_name == expected_result
+
+
+    def test_set_constraint_name_not_true(self):
+        test_value = 'asdfdsa'
+        expected_result = ''
+        self.builder.set_constraint_name(test_value)
+        assert self.builder.constraint_name == expected_result
+
+
+    def test_set_constraint_name_true_typo(self):
+        test_value = 'ture'
+        expected_result = ''
+        self.builder.set_constraint_name(test_value)
+        assert self.builder.constraint_name == expected_result
+
+
+    def test_add_status(self):
+        test_value = 'over 9000'
+        expected_result = 'mandatory'
+        self.builder.add_status(test_value)
+        assert self.builder.parameters['constraint_status'] == expected_result
+
+
+    def test_add_status_another(self):
+        test_value = 'foo'
+        expected_result = 'mandatory'
+        self.builder.add_status(test_value)
+        assert self.builder.parameters['constraint_status'] == expected_result
+
+
+    def test_add_max_year(self):
+        test_value = '1753'
+        expected_result = '1753'
+        self.builder.add_max(test_value)
+        assert self.builder.parameters['maximum_quantity'] == expected_result
+
+
+    def test_add_max_now(self):
+        test_value = 'now'
+        expected_result = 'now'
+        self.builder.add_max(test_value)
+        assert self.builder.parameters['maximum_quantity'] == expected_result
+
+
+    def test_add_max_empty(self):
+        test_value = ''
+        expected_result = ''
+        self.builder.add_max(test_value)
+        assert self.builder.parameters['maximum_quantity'] == expected_result
+
+
+    def test_add_max_whitespace(self):
+        test_value = '  1 '
+        expected_result = '1'
+        self.builder.add_max(test_value)
+        assert self.builder.parameters['maximum_quantity'] == expected_result
+
+
+    def test_add_min_date(self):
+        test_value = '1957-10-04'
+        expected_result = '1957-10-04'
+        self.builder.add_min(test_value)
+        assert self.builder.parameters['minimum_quantity'] == expected_result
+
+
+    def test_add_min_negative(self):
+        test_value = '-10'
+        expected_result = '-10'
+        self.builder.add_min(test_value)
+        assert self.builder.parameters['minimum_quantity'] == expected_result
+
+
+    def test_add_min_zero_decimal(self):
+        test_value = '0.00'
+        expected_result = '0.00'
+        self.builder.add_min(test_value)
+        assert self.builder.parameters['minimum_quantity'] == expected_result
+
+
+    def test_add_min_empty(self):
+        test_value = ''
+        expected_result = ''
+        self.builder.add_min(test_value)
+        assert self.builder.parameters['minimum_quantity'] == expected_result
+
+
+    def test_add_min_whitespace(self):
+        test_value = '  5 '
+        expected_result = '5'
+        self.builder.add_min(test_value)
+        assert self.builder.parameters['minimum_quantity'] == expected_result
+
+
+    def test_add_namespace_standard(self):
+        test_value = 'File'
+        expected_result = 'File'
+        self.builder.add_namespace(test_value)
+        assert self.builder.parameters['namespace'] == expected_result
+
+
+    def test_add_namespace_empty(self):
+        test_value = ''
+        expected_result = ''
+        self.builder.add_namespace(test_value)
+        assert self.builder.parameters['namespace'] == expected_result
+
+
+    def test_add_namespace_whitespace(self):
+        test_value = ' namespaceValue '
+        expected_result = 'namespaceValue'
+        self.builder.add_namespace(test_value)
+        assert self.builder.parameters['namespace'] == expected_result
+
+
+    def test_add_pattern_img_formats(self):
+        test_value = '&lt;nowiki>(?i).+\.(svg|png|jpg|jpeg|gif)|&lt;/nowiki>'
+        expected_result = r'&lt;nowiki>(?i).+\\.(svg|png|jpg|jpeg|gif)|&lt;/nowiki>'
+        self.builder.add_pattern(test_value)
+        assert self.builder.parameters['pattern'] == expected_result
+
+
+    def test_add_pattern_many_d(self):
+        test_value = '\d\d\d\d \d\d\d\d \d\d\d\d \d\d\d[\dX]'
+        expected_result = r'\\d\\d\\d\\d \\d\\d\\d\\d \\d\\d\\d\\d \\d\\d\\d[\\dX]'
+        self.builder.add_pattern(test_value)
+        assert self.builder.parameters['pattern'] == expected_result
+
+
+    def test_add_pattern_empty(self):
+        test_value = ''
+        expected_result = ''
+        self.builder.add_pattern(test_value)
+        assert self.builder.parameters['pattern'] == expected_result
+
+
+    def test_add_pattern_whitespace(self):
+        test_value = ' patternValue '
+        expected_result = 'patternValue'
+        self.builder.add_pattern(test_value)
+        assert self.builder.parameters['pattern'] == expected_result
+
+
+    def test_add_relation_standard(self):
+        test_value = 'instance'
+        expected_result = 'instance'
+        self.builder.add_relation(test_value)
+        assert self.builder.parameters['relation'] == expected_result
+
+
+    def test_add_relation_empty(self):
+        test_value = ''
+        expected_result = ''
+        self.builder.add_relation(test_value)
+        assert self.builder.parameters['relation'] == expected_result
+
+
+    def test_add_relation_whitespace(self):
+        test_value = ' relationValue '
+        expected_result = 'relationValue'
+        self.builder.add_relation(test_value)
+        assert self.builder.parameters['relation'] == expected_result
+
+
+    def test_write_one_line(self):
+        self.builder.write_first_three_columns = Mock()
+        self.builder.write_blob = Mock()
+        self.builder.reset_parameter = Mock()
+        test_property_number = 4
+        test_constraint_name = "constraint_name"
+        self.builder.write_one_line(test_property_number, test_constraint_name)
+        self.builder.write_first_three_columns.assert_called_once_with(test_property_number, test_constraint_name)
+        self.builder.write_blob.assert_called_once_with()
+        self.builder.reset_parameter.assert_called_once_with()
+
+
+    def test_write_one_line_another(self):
+        self.builder.write_first_three_columns = Mock()
+        self.builder.write_blob = Mock()
+        self.builder.reset_parameter = Mock()
+        test_property_number = 1337
+        test_constraint_name = "another_constraint_name"
+        self.builder.write_one_line(test_property_number, test_constraint_name)
+        self.builder.write_first_three_columns.assert_called_once_with(1337, "another_constraint_name")
+        self.builder.write_blob.assert_called_once_with()
+        self.builder.reset_parameter.assert_called_once_with()
+
+
+    def test_write_multiple_lines_forloop_once(self):
+        self.builder.write_first_three_columns = Mock()
+        self.builder.split_list_parameter = Mock()
+        self.builder.write_blob = Mock()
+        self.builder.reset_parameter = Mock()
+        self.builder.list_parameter = "P31:Q11879590,Q202444,Q12308941"
+        self.builder.parameters = {'aKey':"aValue", 'item':"itemValue", 'anotherKey':"anotherValue"}
+        test_property_number = 17
+        test_constraint_name = "Conflicts with"
+        assert self.builder.parameters == {'aKey':"aValue", 'item':"itemValue", 'anotherKey':"anotherValue"}
+        self.builder.write_multiple_lines(test_property_number, test_constraint_name)
+        assert self.builder.parameters == {'aKey':"aValue", 'anotherKey':"anotherValue"}
+        self.builder.write_first_three_columns.assert_called_once_with(17, "Conflicts with")
+        self.builder.split_list_parameter.assert_called_once_with("P31:Q11879590,Q202444,Q12308941")
+        self.builder.write_blob.assert_called_once_with()
+        self.builder.reset_parameter.assert_called_once_with()
+
+
+    def test_write_multiple_lines_forloop_thrice(self):
+        self.builder.write_first_three_columns = Mock()
+        self.builder.split_list_parameter = Mock()
+        self.builder.write_blob = Mock()
+        self.builder.reset_parameter = Mock()
+        self.builder.list_parameter = "P625;P17;P131"
+        self.builder.parameters = {'abc':0, 'item':1, 'xyz':2}
+        test_property_number = 21
+        test_constraint_name = "Conflicts with"
+        assert self.builder.parameters == {'abc':0, 'item':1, 'xyz':2}
+        self.builder.write_multiple_lines(test_property_number, test_constraint_name)
+        assert self.builder.parameters == {'abc':0, 'xyz':2}
+        assert self.builder.write_first_three_columns.call_count == 3
+        self.builder.write_first_three_columns.assert_called_with(21, "Conflicts with")
+        assert self.builder.split_list_parameter.call_count == 3
+        self.builder.split_list_parameter.assert_called_with("P131")
+        assert self.builder.write_blob.call_count == 3
+        self.builder.write_blob.assert_called_with()
+        self.builder.reset_parameter.assert_called_once_with()
+
+
+    def test_write_multiple_lines_multiple(self):
+        self.builder.write_first_three_columns = Mock()
+        self.builder.split_list_parameter = Mock()
+        self.builder.write_blob = Mock()
+        self.builder.reset_parameter = Mock()
+        self.builder.list_parameter = "P31:Q4167836,Q13406463,Q4164871,Q8261,Q386724,Q1371849,Q273057,Q101352,Q132821,Q4;P360;P364;P50"
+        self.builder.parameters = {'asdf':"fdsa", 'item':"it3m", 'kek':"trololo"}
+        test_property_number = 77
+        test_constraint_name = "Conflicts with"
+        assert self.builder.parameters == {'asdf':"fdsa", 'item':"it3m", 'kek':"trololo"}
+        self.builder.write_multiple_lines(test_property_number, test_constraint_name)
+        assert self.builder.parameters == {'asdf':"fdsa", 'kek':"trololo"}
+        assert self.builder.write_first_three_columns.call_count == 4
+        self.builder.write_first_three_columns.assert_called_with(77, "Conflicts with")
+        assert self.builder.split_list_parameter.call_count == 4
+        self.builder.split_list_parameter.assert_called_with("P50")
+        assert self.builder.write_blob.call_count == 4
+        self.builder.write_blob.assert_called_with()
+        self.builder.reset_parameter.assert_called_once_with()
+
+
+    def test_write_multiple_lines_empty_list_parameter(self):
+        self.builder.write_first_three_columns = Mock()
+        self.builder.split_list_parameter = Mock()
+        self.builder.write_blob = Mock()
+        self.builder.reset_parameter = Mock()
+        self.builder.list_parameter = ""
+        self.builder.parameters = {'p':"f", 'item':"item", 'e':"l"}
+        test_property_number = 100
+        test_constraint_name = "Conflicts with"
+        assert self.builder.parameters == {'p':"f", 'item':"item", 'e':"l"}
+        self.builder.write_multiple_lines(test_property_number, test_constraint_name)
+        assert self.builder.parameters == {'p':"f", 'e':"l"}
+        self.builder.write_first_three_columns.assert_called_once_with(100, "Conflicts with")
+        self.builder.split_list_parameter.assert_called_once_with("")
+        self.builder.write_blob.assert_called_once_with()
+        self.builder.reset_parameter.assert_called_once_with()
+        
 
     def test_progress_print_standard(self, capsys):
         self.builder.progress_print(0, 2000)
