@@ -9,7 +9,7 @@ install:
     - pip install coveralls
 
 script: 
-    - py.test --verbose --cov-config .coveragerc --cov dumpconverter --cov-report xml
+    - py.test --verbose --cov-config .coveragerc --cov sqlScriptBuilder --cov-report xml
 
 after_success:
     - coveralls
