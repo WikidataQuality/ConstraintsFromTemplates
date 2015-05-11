@@ -119,7 +119,7 @@ class sqlScriptBuilder:
 
 
 	def write_first_three_columns(self, property_number, constraint_name):
-		self.outputString += ( '(' + '"' + str(uuid.uuid4()) + '", ' + format(property_number) + ', \"' + constraint_name.strip() + '\", ' )
+		self.outputString += ('(' + '"' + str(uuid.uuid4()) + '", ' + str(property_number) + ', \"' + constraint_name.strip() + '\", ')
 
 	def write_blob(self):
 		json_blob_string = json.dumps(json.dumps(self.parameters)).replace("&lt;nowiki>","").replace("&lt;/nowiki>","").replace("&amp;lt;nowiki&amp;lt;","").replace("&amp;lt;/nowiki&amp;gt;","").replace("<nowiki>","").replace("</nowiki>","")
