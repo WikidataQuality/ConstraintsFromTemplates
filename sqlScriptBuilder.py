@@ -7,10 +7,8 @@ import uuid
 class sqlScriptBuilder:
 
 	MAX_PROPERTY_NUMBER = 2000
-	MAX_SQL_LINE_NUMBER = 455
-	SQL_FILE_NAME = "fill_wdqa_constraints_from_templates_with_json_blob.sql"
 
-	SQL_SCRIPT_HEAD = "INSERT INTO wdqa_constraints (constraint_guid, pid, constraint_type_qid, constraint_parameters) VALUES\n"
+	SQL_FILE_NAME = "fill_wdqa_constraints_from_templates_with_json_blob.csv"
 
 	CONSTRAINT_BEGIN_STRING = "{{Constraint:"
 
@@ -114,28 +112,27 @@ class sqlScriptBuilder:
 
 
 	def write_first_three_columns(self, property_number, constraint_name):
-		self.outputString += ('(' + '"' + str(uuid.uuid4()) + '", ' + str(property_number) + ', \"' + constraint_name.strip() + '\", ')
+		self.outputString += ('"' + str(uuid.uuid4()) + '", ' + str(property_number) + ', \"' + constraint_name.strip() + '\", ')
 
 	def write_blob(self):
 		json_blob_string = json.dumps(json.dumps(self.parameters)).replace("&lt;nowiki>","").replace("&lt;/nowiki>","").replace("&amp;lt;nowiki&amp;lt;","").replace("&amp;lt;/nowiki&amp;gt;","").replace("<nowiki>","").replace("</nowiki>","")
 		self.outputString += json_blob_string
-		self.outputString += ("),\n")
+		self.outputString += "\n"
 
 	def reset_parameter(self):
 		self.parameters = {}
 		self.list_parameter = 'NULL'
 
-	def reset_number_of_written_lines_and_output_string(self):
-		self.writtenLinesInInsertStatement = 0
-		self.outputString = self.SQL_SCRIPT_HEAD
+	def reset_output_string(self):
+		self.outputString = ""
 
 	def writeOutputStringToFile(self):
 		print("writing into " + self.SQL_FILE_NAME)
 		with codecs.open(self.SQL_FILE_NAME, "a", "utf-8") as sql_file:
-			self.outputString = self.outputString.rstrip(",\n") + ";\n\n"
+			self.outputString = self.outputString.rstrip(",\n") #+ ";\n\n"
 			sql_file.write(self.outputString)
 
-		self.reset_number_of_written_lines_and_output_string()
+		self.reset_output_string()
 
 	def get_constraint_part(self, property_talk_page):
 		start = property_talk_page.find("{{Constraint:")
@@ -261,7 +258,6 @@ class sqlScriptBuilder:
 				self.add_all_parameters(constraint_parameters)
 					
 			self.write_line_in_sql_file(property_number, self.constraint_name)
-			self.writtenLinesInInsertStatement += 1
 
 			constraint_string, remaining_constraint = self.split_constraint_block(remaining_constraint)
 
@@ -288,18 +284,15 @@ class sqlScriptBuilder:
 	def run(self):
 		self.delete_old_sql_file()
 
-		self.reset_number_of_written_lines_and_output_string()
+		self.reset_output_string()
 
 		for property_number in range(1, self.MAX_PROPERTY_NUMBER+1):
-
-			if (self.writtenLinesInInsertStatement > self.MAX_SQL_LINE_NUMBER):
-				self.writeOutputStringToFile()
 
 			self.progress_print(property_number, self.MAX_PROPERTY_NUMBER)
 
 			self.process_property_talk_page(property_number)
 
-		if self.outputString != self.SQL_SCRIPT_HEAD:
+		if self.outputString != "":
 			self.writeOutputStringToFile()
 
 

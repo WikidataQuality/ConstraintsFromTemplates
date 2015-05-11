@@ -599,7 +599,7 @@ class TestSqlScriptBuilder():
         uuid.uuid4 = Mock(return_value='superUniqueID')
         self.builder.outputString = ""
         self.builder.write_first_three_columns(1498, "super awesome constraint name with swag")
-        expected_result = '("superUniqueID", 1498, \"super awesome constraint name with swag\", '
+        expected_result = '"superUniqueID", 1498, \"super awesome constraint name with swag\", '
         assert self.builder.outputString == expected_result
 
 
@@ -607,7 +607,7 @@ class TestSqlScriptBuilder():
         uuid.uuid4 = Mock(return_value='suchUniqueMuchWow')
         self.builder.outputString = ""
         self.builder.write_first_three_columns(8484, " another great constraint name ")
-        expected_result = '("suchUniqueMuchWow", 8484, \"another great constraint name\", '
+        expected_result = '"suchUniqueMuchWow", 8484, \"another great constraint name\", '
         assert self.builder.outputString == expected_result
 
 
@@ -615,7 +615,7 @@ class TestSqlScriptBuilder():
         uuid.uuid4 = Mock(return_value='uniquicious')
         self.builder.outputString = "im da outputString"
         self.builder.write_first_three_columns(2357, "constraint name fo shizzle")
-        expected_result = 'im da outputString("uniquicious", 2357, \"constraint name fo shizzle\", '
+        expected_result = 'im da outputString"uniquicious", 2357, \"constraint name fo shizzle\", '
         assert self.builder.outputString == expected_result
 
 
