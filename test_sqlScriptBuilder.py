@@ -398,14 +398,14 @@ class TestSqlScriptBuilder():
 
     def test_add_pattern_img_formats(self):
         test_value = '&lt;nowiki>(?i).+\.(svg|png|jpg|jpeg|gif)|&lt;/nowiki>'
-        expected_result = r'&lt;nowiki>(?i).+\\.(svg|png|jpg|jpeg|gif)|&lt;/nowiki>'
+        expected_result = r'&lt;nowiki>(?i).+\.(svg|png|jpg|jpeg|gif)|&lt;/nowiki>'
         self.builder.add_pattern(test_value)
         assert self.builder.parameters['pattern'] == expected_result
 
 
     def test_add_pattern_many_d(self):
         test_value = '\d\d\d\d \d\d\d\d \d\d\d\d \d\d\d[\dX]'
-        expected_result = r'\\d\\d\\d\\d \\d\\d\\d\\d \\d\\d\\d\\d \\d\\d\\d[\\dX]'
+        expected_result = r'\d\d\d\d \d\d\d\d \d\d\d\d \d\d\d[\dX]'
         self.builder.add_pattern(test_value)
         assert self.builder.parameters['pattern'] == expected_result
 

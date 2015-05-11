@@ -81,7 +81,7 @@ class sqlScriptBuilder:
 		self.parameters['namespace'] = values.strip()
 
 	def add_pattern(self, values):
-		self.parameters['pattern'] = values.replace("\\","\\\\").strip()
+		self.parameters['pattern'] = values.strip()
 
 	def add_relation(self, values):
 		self.parameters['relation'] = values.strip()	
