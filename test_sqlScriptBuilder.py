@@ -2,8 +2,6 @@
 
 import pytest
 from mock import Mock
-from mock import patch
-from mock import create_autospec
 
 from sqlScriptBuilder import sqlScriptBuilder
 import uuid

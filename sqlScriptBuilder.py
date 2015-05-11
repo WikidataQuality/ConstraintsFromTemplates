@@ -1,10 +1,5 @@
-from lxml import html
 import requests
-from collections import OrderedDict
-from operator import itemgetter
-import time
 import codecs
-import unicodedata
 import os
 import json
 import uuid
