@@ -3,6 +3,7 @@ import codecs
 import os
 import json
 import uuid
+import re
 
 class sqlScriptBuilder:
 
@@ -129,7 +130,7 @@ class sqlScriptBuilder:
 	def writeOutputStringToFile(self):
 		print("writing into " + self.SQL_FILE_NAME)
 		with codecs.open(self.SQL_FILE_NAME, "a", "utf-8") as sql_file:
-			self.outputString = self.outputString.rstrip(",\n") #+ ";\n\n"
+			self.outputString = self.outputString.rstrip(",\n")
 			sql_file.write(self.outputString)
 
 		self.reset_output_string()
@@ -162,8 +163,16 @@ class sqlScriptBuilder:
 
 
 	def property_exists(self, propertyTalkPage):
-		return not (propertyTalkPage.find("Creating Property talk") != -1 or 
-			propertyTalkPage == "")
+		# return not (propertyTalkPage.find("Creating Property talk") != -1 or 
+		# 	propertyTalkPage == "")
+		regex = re.compile('<title>(.*)</title>')
+		match = regex.search(propertyTalkPage)
+		if match:
+			print str(not "Creating Property talk" in match.group(0))
+			return not "Creating Property talk" in match.group(0)
+		else:
+			print("False")
+			return False
 
 
 	def get_constraint_end_index(self, constraintPart):

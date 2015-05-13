@@ -2,6 +2,7 @@
 
 import pytest
 from mock import Mock
+import os.path
 
 from sqlScriptBuilder import sqlScriptBuilder
 import uuid
@@ -757,5 +758,28 @@ class TestSqlScriptBuilder():
         result_string, result_remaining = self.builder.split_constraint_block(test_constraint_part)
         assert result_string == expected_result_string
         assert result_remaining == expected_result_remaining
+
+
+#open("test.csv", 'a').close()
+
+    def test_run_complete(self):
+        csv_path = "test.csv"
+        self.builder.SQL_FILE_NAME = csv_path
+        self.builder.MAX_PROPERTY_NUMBER = 3
+        try:
+            os.remove(csv_path)
+        except OSError:
+            pass
+        with open("first_test_property_talk_page.html", 'r') as first:
+            first_test_property_talk_page = first.read()
+        with open("second_test_property_talk_page.html", 'r') as second:
+            second_test_property_talk_page = second.read()
+        with open("third_test_property_talk_page.html", 'r') as third:
+            third_test_property_talk_page = third.read()
+        self.builder.get_property_talk_page = Mock(side_effect=[first_test_property_talk_page, second_test_property_talk_page, third_test_property_talk_page])
+        assert os.path.isfile(csv_path) == False
+        self.builder.run()
+        assert os.path.isfile(csv_path) == True
+
 
 
