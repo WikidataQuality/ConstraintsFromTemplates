@@ -4,12 +4,13 @@ import os
 import json
 import uuid
 import re
+import csv
 
 class sqlScriptBuilder:
 
-	MAX_PROPERTY_NUMBER = 2000
+	MAX_PROPERTY_NUMBER = 20
 
-	SQL_FILE_NAME = "fill_wdqa_constraints_from_templates_with_json_blob.csv"
+	CSV_FILE_NAME = "constraints.csv"
 
 	CONSTRAINT_BEGIN_STRING = "{{Constraint:"
 
@@ -86,15 +87,13 @@ class sqlScriptBuilder:
 		self.parameters['relation'] = values.strip()	
 
 	def write_one_line(self, property_number, constraint_name):
-		self.write_first_three_columns(property_number, constraint_name)
-		self.write_blob()
+		self.write_line_to_csv(property_number, constraint_name)
 		self.reset_parameter()
 
 	def write_multiple_lines(self, property_number, constraint_name):
 		for line in self.list_parameter.split(';'):
-			self.write_first_three_columns(property_number, constraint_name)
 			self.split_list_parameter(line)
-			self.write_blob()	
+			self.write_line_to_csv(property_number, constraint_name)
 			self.parameters.pop('item', None)
 		self.reset_parameter()
 
@@ -104,6 +103,11 @@ class sqlScriptBuilder:
 		else:
 			self.write_one_line(property_number, constraint_name)
 
+	def write_line_to_csv(self, property_number, constraint_name):
+		json_blob_string = json.dumps(self.parameters).replace("&lt;nowiki>","").replace("&lt;/nowiki>","").replace("&amp;lt;nowiki&amp;lt;","").replace("&amp;lt;/nowiki&amp;gt;","").replace("<nowiki>","").replace("</nowiki>","")
+		self.csv_writer.writerow((str(uuid.uuid4()), str(property_number),  constraint_name.strip(), json_blob_string))
+
+
 	def split_list_parameter(self, line):
 		if ':' in line:
 			self.parameters['item'] = line[line.index(':')+1:]
@@ -111,29 +115,10 @@ class sqlScriptBuilder:
 		else:
 			self.parameters['property'] = line
 
-
-	def write_first_three_columns(self, property_number, constraint_name):
-		self.outputString += ('"' + str(uuid.uuid4()) + '", ' + str(property_number) + ', \"' + constraint_name.strip() + '\", ')
-
-	def write_blob(self):
-		json_blob_string = json.dumps(json.dumps(self.parameters)).replace("&lt;nowiki>","").replace("&lt;/nowiki>","").replace("&amp;lt;nowiki&amp;lt;","").replace("&amp;lt;/nowiki&amp;gt;","").replace("<nowiki>","").replace("</nowiki>","")
-		self.outputString += json_blob_string
-		self.outputString += "\n"
-
 	def reset_parameter(self):
 		self.parameters = {}
 		self.list_parameter = 'NULL'
 
-	def reset_output_string(self):
-		self.outputString = ""
-
-	def writeOutputStringToFile(self):
-		print("writing into " + self.SQL_FILE_NAME)
-		with codecs.open(self.SQL_FILE_NAME, "a", "utf-8") as sql_file:
-			self.outputString = self.outputString.rstrip(",\n")
-			sql_file.write(self.outputString)
-
-		self.reset_output_string()
 
 	def get_constraint_part(self, property_talk_page):
 		start = property_talk_page.find("{{Constraint:")
@@ -245,12 +230,6 @@ class sqlScriptBuilder:
 			except KeyError, e:  # other Exceptions will be raised
 				pass
 
-
-	def delete_old_sql_file(self):
-		if os.path.exists(self.SQL_FILE_NAME):
-			os.remove(self.SQL_FILE_NAME)
-
-
 	def process_constraint_part(self, constraint_part, property_number):
 		constraint_string, remaining_constraint = self.split_constraint_block(constraint_part)
 		while constraint_string != "":
@@ -291,19 +270,15 @@ class sqlScriptBuilder:
 	# constraints as statements on properties
 
 	def run(self):
-		self.delete_old_sql_file()
-
-		self.reset_output_string()
-
+		csv_file = open( self.CSV_FILE_NAME, "wb")
+		self.csv_writer = csv.writer(csv_file)
 		for property_number in range(1, self.MAX_PROPERTY_NUMBER+1):
 
 			self.progress_print(property_number, self.MAX_PROPERTY_NUMBER)
 
 			self.process_property_talk_page(property_number)
 
-		if self.outputString != "":
-			self.writeOutputStringToFile()
-
+		csv_file.close()
 
 def main():
 	builder = sqlScriptBuilder()
