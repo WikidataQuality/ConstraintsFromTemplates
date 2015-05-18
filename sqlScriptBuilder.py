@@ -8,7 +8,7 @@ import csv
 
 class sqlScriptBuilder:
 
-	MAX_PROPERTY_NUMBER = 20
+	MAX_PROPERTY_NUMBER = 2000
 
 	CSV_FILE_NAME = "constraints.csv"
 
@@ -270,15 +270,14 @@ class sqlScriptBuilder:
 	# constraints as statements on properties
 
 	def run(self):
-		csv_file = open( self.CSV_FILE_NAME, "wb")
-		self.csv_writer = csv.writer(csv_file)
-		for property_number in range(1, self.MAX_PROPERTY_NUMBER+1):
+		with open(self.CSV_FILE_NAME, "wb") as csv_file:
+			self.csv_writer = csv.writer(csv_file)
+			for property_number in range(1, self.MAX_PROPERTY_NUMBER+1):
 
-			self.progress_print(property_number, self.MAX_PROPERTY_NUMBER)
+				self.progress_print(property_number, self.MAX_PROPERTY_NUMBER)
 
-			self.process_property_talk_page(property_number)
+				self.process_property_talk_page(property_number)
 
-		csv_file.close()
 
 def main():
 	builder = sqlScriptBuilder()

@@ -3,6 +3,7 @@
 import pytest
 from mock import Mock
 import os.path
+import csv
 
 from sqlScriptBuilder import sqlScriptBuilder
 import uuid
@@ -11,8 +12,14 @@ import uuid
 class TestSqlScriptBuilder():
 
     def setup_method(self, method):
-        #  setup_method is invoked for every test method of a class
+        #  setup_method is invoked befor every test method of a class
         self.builder = sqlScriptBuilder()
+        self.csv_file = open("test_constraints.csv", "wb")
+        self.builder.csv_writer = csv.writer(self.csv_file)
+
+    def teardown_method(self, method):
+        #  teardown_method is invoked after every test method of a class
+        self.csv_file.close()
 
     def test_find_next_seperator_pipe_before_next_equal(self):
         test_constraint_parameters = "classes=Q1048835,Q56061|relation=instance"
@@ -446,108 +453,6 @@ class TestSqlScriptBuilder():
         assert self.builder.parameters['relation'] == expected_result
 
 
-    def test_write_one_line(self):
-        self.builder.write_first_three_columns = Mock()
-        self.builder.write_blob = Mock()
-        self.builder.reset_parameter = Mock()
-        test_property_number = 4
-        test_constraint_name = "constraint_name"
-        self.builder.write_one_line(test_property_number, test_constraint_name)
-        self.builder.write_first_three_columns.assert_called_once_with(test_property_number, test_constraint_name)
-        self.builder.write_blob.assert_called_once_with()
-        self.builder.reset_parameter.assert_called_once_with()
-
-
-    def test_write_one_line_another(self):
-        self.builder.write_first_three_columns = Mock()
-        self.builder.write_blob = Mock()
-        self.builder.reset_parameter = Mock()
-        test_property_number = 1337
-        test_constraint_name = "another_constraint_name"
-        self.builder.write_one_line(test_property_number, test_constraint_name)
-        self.builder.write_first_three_columns.assert_called_once_with(1337, "another_constraint_name")
-        self.builder.write_blob.assert_called_once_with()
-        self.builder.reset_parameter.assert_called_once_with()
-
-
-    def test_write_multiple_lines_forloop_once(self):
-        self.builder.write_first_three_columns = Mock()
-        self.builder.split_list_parameter = Mock()
-        self.builder.write_blob = Mock()
-        self.builder.reset_parameter = Mock()
-        self.builder.list_parameter = "P31:Q11879590,Q202444,Q12308941"
-        self.builder.parameters = {'aKey':"aValue", 'item':"itemValue", 'anotherKey':"anotherValue"}
-        test_property_number = 17
-        test_constraint_name = "Conflicts with"
-        assert self.builder.parameters == {'aKey':"aValue", 'item':"itemValue", 'anotherKey':"anotherValue"}
-        self.builder.write_multiple_lines(test_property_number, test_constraint_name)
-        assert self.builder.parameters == {'aKey':"aValue", 'anotherKey':"anotherValue"}
-        self.builder.write_first_three_columns.assert_called_once_with(17, "Conflicts with")
-        self.builder.split_list_parameter.assert_called_once_with("P31:Q11879590,Q202444,Q12308941")
-        self.builder.write_blob.assert_called_once_with()
-        self.builder.reset_parameter.assert_called_once_with()
-
-
-    def test_write_multiple_lines_forloop_thrice(self):
-        self.builder.write_first_three_columns = Mock()
-        self.builder.split_list_parameter = Mock()
-        self.builder.write_blob = Mock()
-        self.builder.reset_parameter = Mock()
-        self.builder.list_parameter = "P625;P17;P131"
-        self.builder.parameters = {'abc':0, 'item':1, 'xyz':2}
-        test_property_number = 21
-        test_constraint_name = "Conflicts with"
-        assert self.builder.parameters == {'abc':0, 'item':1, 'xyz':2}
-        self.builder.write_multiple_lines(test_property_number, test_constraint_name)
-        assert self.builder.parameters == {'abc':0, 'xyz':2}
-        assert self.builder.write_first_three_columns.call_count == 3
-        self.builder.write_first_three_columns.assert_called_with(21, "Conflicts with")
-        assert self.builder.split_list_parameter.call_count == 3
-        self.builder.split_list_parameter.assert_called_with("P131")
-        assert self.builder.write_blob.call_count == 3
-        self.builder.write_blob.assert_called_with()
-        self.builder.reset_parameter.assert_called_once_with()
-
-
-    def test_write_multiple_lines_multiple(self):
-        self.builder.write_first_three_columns = Mock()
-        self.builder.split_list_parameter = Mock()
-        self.builder.write_blob = Mock()
-        self.builder.reset_parameter = Mock()
-        self.builder.list_parameter = "P31:Q4167836,Q13406463,Q4164871,Q8261,Q386724,Q1371849,Q273057,Q101352,Q132821,Q4;P360;P364;P50"
-        self.builder.parameters = {'asdf':"fdsa", 'item':"it3m", 'kek':"trololo"}
-        test_property_number = 77
-        test_constraint_name = "Conflicts with"
-        assert self.builder.parameters == {'asdf':"fdsa", 'item':"it3m", 'kek':"trololo"}
-        self.builder.write_multiple_lines(test_property_number, test_constraint_name)
-        assert self.builder.parameters == {'asdf':"fdsa", 'kek':"trololo"}
-        assert self.builder.write_first_three_columns.call_count == 4
-        self.builder.write_first_three_columns.assert_called_with(77, "Conflicts with")
-        assert self.builder.split_list_parameter.call_count == 4
-        self.builder.split_list_parameter.assert_called_with("P50")
-        assert self.builder.write_blob.call_count == 4
-        self.builder.write_blob.assert_called_with()
-        self.builder.reset_parameter.assert_called_once_with()
-
-
-    def test_write_multiple_lines_empty_list_parameter(self):
-        self.builder.write_first_three_columns = Mock()
-        self.builder.split_list_parameter = Mock()
-        self.builder.write_blob = Mock()
-        self.builder.reset_parameter = Mock()
-        self.builder.list_parameter = ""
-        self.builder.parameters = {'p':"f", 'item':"item", 'e':"l"}
-        test_property_number = 100
-        test_constraint_name = 'Conflicts with'
-        assert self.builder.parameters == {'p':"f", 'item':"item", 'e':"l"}
-        self.builder.write_multiple_lines(test_property_number, test_constraint_name)
-        assert self.builder.parameters == {'p':"f", 'e':"l"}
-        self.builder.write_first_three_columns.assert_called_once_with(100, "Conflicts with")
-        self.builder.split_list_parameter.assert_called_once_with("")
-        self.builder.write_blob.assert_called_once_with()
-        self.builder.reset_parameter.assert_called_once_with()
-
-
     def test_write_line_in_sql_file_null(self):
         self.builder.write_multiple_lines = Mock()
         self.builder.write_one_line = Mock()
@@ -594,30 +499,6 @@ class TestSqlScriptBuilder():
         assert self.builder.parameters['property'] == ""
         with pytest.raises(KeyError):
             item = self.builder.parameters['item']
-
-
-    def test_write_first_three_columns_standard(self):
-        uuid.uuid4 = Mock(return_value='superUniqueID')
-        self.builder.outputString = ""
-        self.builder.write_first_three_columns(1498, "super awesome constraint name with swag")
-        expected_result = '"superUniqueID", 1498, \"super awesome constraint name with swag\", '
-        assert self.builder.outputString == expected_result
-
-
-    def test_write_first_three_columns_whitespace(self):
-        uuid.uuid4 = Mock(return_value='suchUniqueMuchWow')
-        self.builder.outputString = ""
-        self.builder.write_first_three_columns(8484, " another great constraint name ")
-        expected_result = '"suchUniqueMuchWow", 8484, \"another great constraint name\", '
-        assert self.builder.outputString == expected_result
-
-
-    def test_write_first_three_columns_preset_OutputString(self):
-        uuid.uuid4 = Mock(return_value='uniquicious')
-        self.builder.outputString = "im da outputString"
-        self.builder.write_first_three_columns(2357, "constraint name fo shizzle")
-        expected_result = 'im da outputString"uniquicious", 2357, \"constraint name fo shizzle\", '
-        assert self.builder.outputString == expected_result
 
 
     def test_progress_print_standard(self, capsys):
@@ -763,8 +644,9 @@ class TestSqlScriptBuilder():
 #open("test.csv", 'a').close()
 
     def test_run_complete(self):
-        csv_path = "test.csv"
-        self.builder.SQL_FILE_NAME = csv_path
+        # csv_path = "test.csv"
+        csv_path = "constraints.csv"
+        # self.builder.SQL_FILE_NAME = csv_path
         self.builder.MAX_PROPERTY_NUMBER = 3
         try:
             os.remove(csv_path)
