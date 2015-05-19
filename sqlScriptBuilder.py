@@ -6,7 +6,7 @@ import uuid
 import re
 import csv
 
-class sqlScriptBuilder:
+class csvScriptBuilder:
 
 	MAX_PROPERTY_NUMBER = 2000
 
@@ -97,7 +97,7 @@ class sqlScriptBuilder:
 			self.parameters.pop('item', None)
 		self.reset_parameter()
 
-	def write_line_in_sql_file(self, property_number, constraint_name):
+	def write_line_in_csv_file(self, property_number, constraint_name):
 		if self.list_parameter != 'NULL':
 			self.write_multiple_lines(property_number, constraint_name)
 		else:
@@ -243,7 +243,7 @@ class sqlScriptBuilder:
 				constraint_parameters = constraint_string[delimiter_index+1:]
 				self.add_all_parameters(constraint_parameters)
 					
-			self.write_line_in_sql_file(property_number, self.constraint_name)
+			self.write_line_in_csv_file(property_number, self.constraint_name)
 
 			constraint_string, remaining_constraint = self.split_constraint_block(remaining_constraint)
 
@@ -262,7 +262,7 @@ class sqlScriptBuilder:
 			self.process_constraint_part(constraintPart, property_number)
 
 
-	# only purpose: Build SQL-Statement to fill table with constraints
+	# only purpose: Build csv-Statement to fill table with constraints
 	# fetches constraints from property talk pages
 	# nonetheless: use table layout that will suit the new way of storing 
 	# constraints as statements on properties
@@ -278,7 +278,7 @@ class sqlScriptBuilder:
 
 
 def main():
-	builder = sqlScriptBuilder()
+	builder = csvScriptBuilder()
 	builder.run()
 
 if __name__ == "__main__": main()

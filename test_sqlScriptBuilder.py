@@ -5,15 +5,15 @@ from mock import Mock
 import os.path
 import csv
 
-from sqlScriptBuilder import sqlScriptBuilder
+from sqlScriptBuilder import csvScriptBuilder
 import uuid
 
 
-class TestSqlScriptBuilder():
+class TestCsvScriptBuilder():
 
     def setup_method(self, method):
         #  setup_method is invoked befor every test method of a class
-        self.builder = sqlScriptBuilder()
+        self.builder = csvScriptBuilder()
         self.csv_file = open("test_constraints.csv", "wb")
         self.builder.csv_writer = csv.writer(self.csv_file)
 
@@ -453,24 +453,24 @@ class TestSqlScriptBuilder():
         assert self.builder.parameters['relation'] == expected_result
 
 
-    def test_write_line_in_sql_file_null(self):
+    def test_write_line_in_csv_file_null(self):
         self.builder.write_multiple_lines = Mock()
         self.builder.write_one_line = Mock()
         self.builder.list_parameter = 'NULL'
         test_property_number = 1234
         test_constraint_name = 'Constraint Name'
-        self.builder.write_line_in_sql_file(test_property_number, test_constraint_name)
+        self.builder.write_line_in_csv_file(test_property_number, test_constraint_name)
         assert self.builder.write_multiple_lines.call_count == 0
         self.builder.write_one_line.assert_called_once_with(1234, 'Constraint Name')
 
 
-    def test_write_line_in_sql_file_not_null(self):
+    def test_write_line_in_csv_file_not_null(self):
         self.builder.write_multiple_lines = Mock()
         self.builder.write_one_line = Mock()
         self.builder.list_parameter = 'not Null'
         test_property_number = 4321
         test_constraint_name = 'Another Constraint Name'
-        self.builder.write_line_in_sql_file(test_property_number, test_constraint_name)
+        self.builder.write_line_in_csv_file(test_property_number, test_constraint_name)
         self.builder.write_multiple_lines.assert_called_once_with(4321, 'Another Constraint Name')
         assert self.builder.write_one_line.call_count == 0
 
