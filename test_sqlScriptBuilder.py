@@ -641,27 +641,29 @@ class TestSqlScriptBuilder():
         assert result_remaining == expected_result_remaining
 
 
-#open("test.csv", 'a').close()
-
-    def test_run_complete(self):
-        # csv_path = "test.csv"
-        csv_path = "constraints.csv"
-        # self.builder.SQL_FILE_NAME = csv_path
+    def test_run_complete(self, capsys):
+        csv_path = "testData/test.csv"
+        self.builder.CSV_FILE_NAME = csv_path
         self.builder.MAX_PROPERTY_NUMBER = 3
         try:
             os.remove(csv_path)
         except OSError:
             pass
-        with open("first_test_property_talk_page.html", 'r') as first:
+        with open("testData/first_test_property_talk_page.html", 'r') as first:
             first_test_property_talk_page = first.read()
-        with open("second_test_property_talk_page.html", 'r') as second:
+        with open("testData/second_test_property_talk_page.html", 'r') as second:
             second_test_property_talk_page = second.read()
-        with open("third_test_property_talk_page.html", 'r') as third:
+        with open("testData/third_test_property_talk_page.html", 'r') as third:
             third_test_property_talk_page = third.read()
         self.builder.get_property_talk_page = Mock(side_effect=[first_test_property_talk_page, second_test_property_talk_page, third_test_property_talk_page])
         assert os.path.isfile(csv_path) == False
         self.builder.run()
         assert os.path.isfile(csv_path) == True
-
+        with open("testData/test.csv", 'r') as result:
+            with open("testData/expectedResult.csv", 'r') as expected_result:
+                for result_line in result.readlines():
+                    expected_line = expected_result.readline()
+                    assert result_line[result_line.find(","):] == expected_line[expected_line.find(","):]
+                assert '' == expected_result.readline()
 
 

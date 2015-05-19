@@ -121,24 +121,24 @@ class sqlScriptBuilder:
 
 
 	def get_constraint_part(self, property_talk_page):
-		start = property_talk_page.find("{{Constraint:")
-		 	
-		end = property_talk_page.find("==")
-		if( end != -1):
+		start = property_talk_page.find("{{Constraint:")		 	
+		end = property_talk_page.find("==", start)
+		if end != -1:
 			property_talk_page = property_talk_page[start:end]
 		else:
 			property_talk_page = property_talk_page[start:]
 
 		#delete <!-- --> comments from site
 		open_index = property_talk_page.find("&lt;!--")
-		while (open_index) != -1:
+		while open_index != -1:
 			close_index = property_talk_page.find("-->", open_index)
-			if(close_index == -1):
+			if close_index == -1:
 				break
 				
 			property_talk_page = property_talk_page[:open_index] + property_talk_page[close_index+3:]
 			
 			open_index = property_talk_page.find("&lt;!--")	
+
 		return property_talk_page
 
 
@@ -153,10 +153,8 @@ class sqlScriptBuilder:
 		regex = re.compile('<title>(.*)</title>')
 		match = regex.search(propertyTalkPage)
 		if match:
-			print str(not "Creating Property talk" in match.group(0))
 			return not "Creating Property talk" in match.group(0)
 		else:
-			print("False")
 			return False
 
 
@@ -270,7 +268,7 @@ class sqlScriptBuilder:
 	# constraints as statements on properties
 
 	def run(self):
-		with open(self.CSV_FILE_NAME, "wb") as csv_file:
+		with open(self.CSV_FILE_NAME, 'wb') as csv_file:
 			self.csv_writer = csv.writer(csv_file)
 			for property_number in range(1, self.MAX_PROPERTY_NUMBER+1):
 
