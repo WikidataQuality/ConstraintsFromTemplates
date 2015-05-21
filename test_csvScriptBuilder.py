@@ -14,7 +14,7 @@ class TestCsvScriptBuilder():
     def setup_method(self, method):
         #  setup_method is invoked befor every test method of a class
         self.builder = csvScriptBuilder()
-        self.csv_file = open("test_constraints.csv", "wb")
+        self.csv_file = open("testData/test_constraints.csv", "wb")
         self.builder.csv_writer = csv.writer(self.csv_file)
 
     def teardown_method(self, method):
@@ -453,24 +453,62 @@ class TestCsvScriptBuilder():
         assert self.builder.parameters['relation'] == expected_result
 
 
-    def test_write_line_in_csv_file_null(self):
+    def test_write_one_line(self):
+        self.builder.write_element_into_csv = Mock()
+        self.builder.reset_parameter = Mock()
+        self.builder.write_one_line(1235, "fo shizzle")
+        self.builder.write_element_into_csv.assert_called_once_with(1235, "fo shizzle")
+        self.builder.reset_parameter.assert_called_once_with()
+
+
+    def test_write_one_line_other_values(self):
+        self.builder.write_element_into_csv = Mock()
+        self.builder.reset_parameter = Mock()
+        self.builder.write_one_line(5910, "trololo")
+        self.builder.write_element_into_csv.assert_called_once_with(5910, "trololo")
+        self.builder.reset_parameter.assert_called_once_with()
+
+
+    def test_write_multiple_lines_indivisible(self):
+        self.builder.list_parameter = "P31:Q11879590,Q202444,Q12308941"
+        self.builder.split_list_parameter = Mock()
+        self.builder.write_element_into_csv = Mock()
+        self.builder.reset_parameter = Mock()
+        self.builder.write_multiple_lines(190523, "best contraintname ever")
+        self.builder.split_list_parameter.assert_called_once_with("P31:Q11879590,Q202444,Q12308941")
+        self.builder.write_element_into_csv.assert_called_once_with(190523, "best contraintname ever")
+        self.builder.reset_parameter.assert_called_once_with()
+
+
+    def test_write_multiple_lines_divisible(self):
+        self.builder.list_parameter = "P625;P17;P131"
+        self.builder.split_list_parameter = Mock()
+        self.builder.write_element_into_csv = Mock()
+        self.builder.reset_parameter = Mock()
+        self.builder.write_multiple_lines(10000, "another constraint")
+        assert self.builder.split_list_parameter.call_count == 3
+        assert self.builder.write_element_into_csv.call_count == 3
+        self.builder.reset_parameter.assert_called_once_with()
+
+
+    def test_write_into_csv_file_null(self):
         self.builder.write_multiple_lines = Mock()
         self.builder.write_one_line = Mock()
         self.builder.list_parameter = 'NULL'
         test_property_number = 1234
         test_constraint_name = 'Constraint Name'
-        self.builder.write_line_in_csv_file(test_property_number, test_constraint_name)
+        self.builder.write_into_csv_file(test_property_number, test_constraint_name)
         assert self.builder.write_multiple_lines.call_count == 0
         self.builder.write_one_line.assert_called_once_with(1234, 'Constraint Name')
 
 
-    def test_write_line_in_csv_file_not_null(self):
+    def test_write_into_csv_file_not_null(self):
         self.builder.write_multiple_lines = Mock()
         self.builder.write_one_line = Mock()
         self.builder.list_parameter = 'not Null'
         test_property_number = 4321
         test_constraint_name = 'Another Constraint Name'
-        self.builder.write_line_in_csv_file(test_property_number, test_constraint_name)
+        self.builder.write_into_csv_file(test_property_number, test_constraint_name)
         self.builder.write_multiple_lines.assert_called_once_with(4321, 'Another Constraint Name')
         assert self.builder.write_one_line.call_count == 0
 

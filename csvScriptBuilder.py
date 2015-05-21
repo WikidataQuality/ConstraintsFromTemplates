@@ -87,23 +87,23 @@ class csvScriptBuilder:
 		self.parameters['relation'] = values.strip()	
 
 	def write_one_line(self, property_number, constraint_name):
-		self.write_line_to_csv(property_number, constraint_name)
+		self.write_element_into_csv(property_number, constraint_name)
 		self.reset_parameter()
 
 	def write_multiple_lines(self, property_number, constraint_name):
 		for line in self.list_parameter.split(';'):
 			self.split_list_parameter(line)
-			self.write_line_to_csv(property_number, constraint_name)
+			self.write_element_into_csv(property_number, constraint_name)
 			self.parameters.pop('item', None)
 		self.reset_parameter()
 
-	def write_line_in_csv_file(self, property_number, constraint_name):
+	def write_into_csv_file(self, property_number, constraint_name):
 		if self.list_parameter != 'NULL':
 			self.write_multiple_lines(property_number, constraint_name)
 		else:
 			self.write_one_line(property_number, constraint_name)
 
-	def write_line_to_csv(self, property_number, constraint_name):
+	def write_element_into_csv(self, property_number, constraint_name):
 		json_blob_string = json.dumps(self.parameters).replace("&lt;nowiki>","").replace("&lt;/nowiki>","").replace("&amp;lt;nowiki&amp;lt;","").replace("&amp;lt;/nowiki&amp;gt;","").replace("<nowiki>","").replace("</nowiki>","")
 		self.csv_writer.writerow((str(uuid.uuid4()), str(property_number),  constraint_name.strip(), json_blob_string))
 
@@ -243,7 +243,7 @@ class csvScriptBuilder:
 				constraint_parameters = constraint_string[delimiter_index+1:]
 				self.add_all_parameters(constraint_parameters)
 					
-			self.write_line_in_csv_file(property_number, self.constraint_name)
+			self.write_into_csv_file(property_number, self.constraint_name)
 
 			constraint_string, remaining_constraint = self.split_constraint_block(remaining_constraint)
 
