@@ -9,4 +9,4 @@ pip install -r requirements.txt
 ```
 
 ## Usage
-`python sqlScriptBuilder.py`
+`python csvScriptBuilder.py`
