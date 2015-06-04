@@ -2,6 +2,7 @@
 
 import pytest
 from mock import Mock
+from mock import patch
 import os.path
 import csv
 
@@ -512,6 +513,14 @@ class TestCsvScriptBuilder():
         self.builder.write_multiple_lines.assert_called_once_with(4321, 'Another Constraint Name')
         assert self.builder.write_one_line.call_count == 0
 
+
+    def test_write_element_into_csv_stripable_constraint(self):
+        self.builder.parameters = {'property': u'P580,P582'}
+        uuid.uuid4 = Mock(return_value="much unique such value")
+        self.builder.write_element_into_csv(1929394, " funneh constraintname ")
+        self.csv_file.close()
+        with open("testData/test_constraints.csv", "rb") as csv:
+            assert csv.read() == 'much unique such value,1929394,funneh constraintname,"{""property"": ""P580,P582""}"\r\n'
 
     def test_split_list_parameter_splitable(self):
         test_line = "asdf:xyz"
