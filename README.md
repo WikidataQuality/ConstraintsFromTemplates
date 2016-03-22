@@ -10,3 +10,8 @@ pip install -r requirements.txt
 
 ## Usage
 `python csvScriptBuilder.py`
+
+### Running the tests
+```
+py.test
+```

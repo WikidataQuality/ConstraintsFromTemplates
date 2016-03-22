@@ -8,7 +8,7 @@ import csv
 
 class csvScriptBuilder:
 
-	MAX_PROPERTY_NUMBER = 2000
+	MAX_PROPERTY_NUMBER = 4000
 
 	CSV_FILE_NAME = "constraints.csv"
 
